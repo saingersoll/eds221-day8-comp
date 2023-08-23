@@ -1,0 +1,154 @@
+---
+title: "eds221-day8-comp1"
+format: html
+editor: visual
+---
+
+## GGplot Basics Reviewed
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(patchwork)
+library(gghighlight)
+library(paletteer)
+```
+
+## Read in
+
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+
+lizards
+```
+
+## Data Wrangling
+
+#### Subset to contain Western Whiptails, Colorado Checkered, and Eastern Fence Lizards. Add a new column w/ total length mm -\> cm Group by species and site Return a summary table of mean total length, sd, by species and site
+
+```{r}
+lizard_summarized_table <- lizards %>% 
+  filter(common_name %in% c("western whiptails", "colorado checkered", "eastern fence")) %>% 
+  mutate(total_length_cm = total_length / 10) %>% 
+  group_by(common_name, site) %>% 
+  summarize(mean_total_length_cm = mean(total_length_cm, na.rm = TRUE), sd_total_length_cm = sd(total_length_cm, na.rm = TRUE))
+```
+
+```{r}
+lizard_summarized_table
+```
+
+## Data Viz w/ the Liz
+
+```{r}
+lizard_plot <- 
+  ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name))
+```
+
+```{r}
+lizard_plot
+```
+
+## Facet
+
+```{r}
+lizard_facet <-
+  ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name)) +
+  facet_wrap(~ common_name)
+```
+
+```{r}
+lizard_facet
+```
+
+```{r}
+lizard_facet2 <-
+  ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name)) +
+  facet_wrap(~ common_name, scales = "free")
+```
+
+```{r}
+lizard_facet2
+# scales are not uniform, can be dangerous bc audience can incorrectly compare directy across
+```
+
+```{r}
+lizard_counts <- lizards %>% 
+  mutate(total_lizard_count = dplyr::count(common_name))
+## does not work because mutate introduced the need for non-characters
+```
+
+```{r}
+lizard_counts <- lizards %>% 
+  dplyr::count(common_name)
+```
+
+```{r}
+lizard_counts
+```
+
+```{r}
+lizard_bar
+```
+
+```{r}
+lizard_bar <- ggplot(data = lizard_counts, aes(x = common_name, y = n)) +
+  geom_col(aes(fill = common_name)) 
+```
+
+```{r}
+lizard_bar2 <- ggplot(data = lizard_counts, aes(y = common_name, x = n)) +
+  geom_col(aes(fill = common_name)) 
+```
+
+```{r}
+lizard_bar2
+```
+
+```{r}
+lizard_bar_factored <- ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col() 
+```
+
+```{r}
+lizard_bar_factored
+```
+
+```{r}
+lizard_bar_factored2 <- ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col(aes(fill = common_name)) 
+```
+
+```{r}
+lizard_bar_factored2
+```
+
+```{r}
+lizard_scale <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = seq(from = 0, to = 100, by = 20),
+                     expand = c(0, 0)) +
+  scale_color_gradient(low = "pink", high = "orange")
+```
+
+```{r}
+lizard_scale
+```
+
+```{r}
+lizard_scale2 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = seq(from = 0, to = 100, by = 20),
+                     expand = c(0, 0)) +
+  scale_color_gradient(colors = c("yellow", "pink", "orange"))
+```
+
+```{r}
+lizard_scale2
+```
