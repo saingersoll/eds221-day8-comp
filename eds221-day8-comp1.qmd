@@ -13,6 +13,9 @@ library(here)
 library(patchwork)
 library(gghighlight)
 library(paletteer)
+library(gapminder)
+library(ggrepel)
+library(sf)
 ```
 
 ## Read in
@@ -109,6 +112,8 @@ lizard_bar2 <- ggplot(data = lizard_counts, aes(y = common_name, x = n)) +
 lizard_bar2
 ```
 
+## Factoring
+
 ```{r}
 lizard_bar_factored <- ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, n), x = n)) +
   geom_col() 
@@ -127,28 +132,90 @@ lizard_bar_factored2 <- ggplot(data = lizard_counts, aes(y = fct_reorder(common_
 lizard_bar_factored2
 ```
 
+## Breaks, Color Gradients
+
 ```{r}
 lizard_scale <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
   geom_point(aes(color = weight)) +
   scale_y_continuous(limits = c(0, 100),
                      breaks = seq(from = 0, to = 100, by = 20),
                      expand = c(0, 0)) +
-  scale_color_gradient(low = "pink", high = "orange")
+  scale_color_gradient(low = "pink", high = "orange") +
+  theme_minimal()
 ```
 
 ```{r}
 lizard_scale
 ```
 
+## Hline and Vline
+
 ```{r}
-lizard_scale2 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
-  geom_point(aes(color = weight)) +
-  scale_y_continuous(limits = c(0, 100),
-                     breaks = seq(from = 0, to = 100, by = 20),
-                     expand = c(0, 0)) +
-  scale_color_gradient(colors = c("yellow", "pink", "orange"))
+gapminder_plot <- ggplot(data = gapminder, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point(aes(color = gdpPercap)) +
+  annotate("text", x = 40, y = 9000, label = "A LABEL!") +
+  geom_hline(yintercept = 7000, linetype = "dotted", color = "purple") +
+  geom_vline(xintercept = mean(gapminder$lifeExp))
 ```
 
 ```{r}
-lizard_scale2
+gapminder_plot
+```
+
+## Text Repel and Highlighting
+
+```{r}
+gapminder_2002 <- gapminder %>% 
+  filter(year == 2002, continent == "Europe") %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(shape = 23, size = 4, color = "hotpink", fill = "plum") +
+  geom_text_repel(aes(label = country)) +
+  gghighlight(country == "Poland", label_key = country)
+
+gapminder_2002
+```
+
+```{r}
+gapminder_2005 <- gapminder %>% 
+  filter(year == 2007) %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(shape = 23, size = 4, color = "hotpink", fill = "plum") +
+  geom_text_repel(aes(label = country)) +
+  gghighlight(continent == "Europe", label_key = country, max_highlight = 135)
+
+gapminder_2005
+```
+
+## Making Maps + Paletteer 
+
+```{r}
+jornada_veg <- read_sf(here("data_raw", "spatial_vegetation", "doc.kml")) %>% 
+  select(name = Name) %>% 
+  ggplot() +
+  geom_sf(aes(fill = name), color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::manyeys") +
+   theme(panel.background = element_rect(color = "purple", size = 5, fill = "pink"), plot.background = element_rect(fill = "yellow"))
+
+jornada_veg
+```
+
+```{r}
+plot2 <- ggplot(data = jornada_veg) +
+  geom_sf(aes(fill = name), color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::manyeys") +
+  theme(panel.background = element_rect(color = "purple", size = 5, fill = "pink"), plot.background = element_rect(fill = "yellow"),
+        panel.grid.major = element_line(color = "magenta"),
+        axis.text.x = element_text(color = "blue"))
+```
+
+```{r}
+jornada_veg2 <-
+  ggplot(data = jornada_veg) +
+  geom_sf(aes(fill = name), color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::springfield_simpsons")
+
+jornada_veg2
 ```
